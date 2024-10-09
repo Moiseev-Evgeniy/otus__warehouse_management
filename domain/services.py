@@ -1,5 +1,6 @@
 from domain.models import Product, Order
 from domain.repositories import ProductRepository, OrderRepository
+from infrastructure.orm import ProductORM, OrderORM
 
 
 class WarehouseService:
@@ -7,12 +8,12 @@ class WarehouseService:
         self.product_repo = product_repo
         self.order_repo = order_repo
 
-    def create_product(self, name: str, quantity: int, price: float) -> Product:
+    def create_product(self, name: str, quantity: int, price: float) -> ProductORM:
         product = Product(id=None, name=name, quantity=quantity, price=price)
-        self.product_repo.add(product)
-        return product
+        product_orm = self.product_repo.add(product)
+        return product_orm
 
-    def create_order(self, products: list[Product]) -> Order:
+    def create_order(self, products: list[Product]) -> OrderORM:
         order = Order(id=None, products=products)
-        self.order_repo.add(order)
-        return order
+        order_orm = self.order_repo.add(order)
+        return order_orm

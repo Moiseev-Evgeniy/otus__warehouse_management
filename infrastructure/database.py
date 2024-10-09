@@ -1,1 +1,1 @@
-DATABASE_URL= 'sqllite://warehouse.db'
+DATABASE_URL = "postgresql://POSTGRES:POSTGRES@localhost:5432/POSTGRES"

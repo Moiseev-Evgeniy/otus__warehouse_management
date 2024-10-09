@@ -1,33 +1,49 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+from domain.models import Product, Order
 from domain.services import WarehouseService
 from infrastructure.orm import Base
 from infrastructure.repositories import SqlAlchemyProductRepository, SqlAlchemyOrderRepository
 from infrastructure.unit_of_work import SqlAlchemyUnitOfWork
 from infrastructure.database import DATABASE_URL
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, connect_args={"options": f"-csearch_path=otus_wh"})
 SessionFactory = sessionmaker(bind=engine)
 Base.metadata.create_all(engine)
 
 
 def main():
-    session = SessionFactory()
-    product_repo = SqlAlchemyProductRepository(session)
-    order_repo = SqlAlchemyOrderRepository(session)
 
-    uow = SqlAlchemyUnitOfWork(session)
+    with SqlAlchemyUnitOfWork(SessionFactory()) as session:
+        product_repo = SqlAlchemyProductRepository(session)
+        order_repo = SqlAlchemyOrderRepository(session)
+        warehouse_service = WarehouseService(product_repo, order_repo)
 
-    warehouse_service = WarehouseService(product_repo, order_repo)
-    with uow:
-        new_product = warehouse_service.create_product(name="test1", quantity=1, price=100)
-        uow.commit()
-        print(f"create product: {new_product}")
+        try:
+            p1 = warehouse_service.create_product(name="test1", quantity=1, price=100)
+            p2 = warehouse_service.create_product(name="test2", quantity=2, price=200)
+            p3 = warehouse_service.create_product(name="test3", quantity=3, price=300)
 
-        # todo add some actions
+            session.commit()
+
+            print(f"Created product: id {p1.id}")
+            print(f"Created product: id {p2.id}")
+            print(f"Created product: id {p3.id}")
+
+            p1 = Product(id=p1.id, name=p1.name, quantity=p1.quantity, price=p1.price)
+            p2 = Product(id=p2.id, name=p2.name, quantity=p2.quantity, price=p2.price)
+            p3 = Product(id=p3.id, name=p3.name, quantity=p3.quantity, price=p3.price)
+
+            new_order = warehouse_service.create_order([p1, p2, p3])
+            session.commit()
+            print(f"Created order: id {new_order.id}")
+            new_order = Order(id=new_order.id)
+
+        except Exception as e:
+            session.rollback()
+            raise e
 
 
 if __name__ == "__main__":
     main()
-
-
