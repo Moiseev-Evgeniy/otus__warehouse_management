@@ -1,21 +1,13 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from domain.models import Product, Order
 from domain.services import WarehouseService
-from infrastructure.orm import Base
+from infrastructure.database import SessionFactory as SyncSession
 from infrastructure.repositories import SqlAlchemyProductRepository, SqlAlchemyOrderRepository
 from infrastructure.unit_of_work import SqlAlchemyUnitOfWork
-from infrastructure.database import DATABASE_URL
-
-engine = create_engine(DATABASE_URL, connect_args={"options": f"-csearch_path=otus_wh"})
-SessionFactory = sessionmaker(bind=engine)
-Base.metadata.create_all(engine)
 
 
 def main():
 
-    with SqlAlchemyUnitOfWork(SessionFactory()) as session:
+    with SqlAlchemyUnitOfWork(SyncSession()) as session:
         product_repo = SqlAlchemyProductRepository(session)
         order_repo = SqlAlchemyOrderRepository(session)
         warehouse_service = WarehouseService(product_repo, order_repo)
