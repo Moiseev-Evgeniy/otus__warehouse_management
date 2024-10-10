@@ -1,3 +1,5 @@
+from typing import Type
+
 from sqlalchemy.orm import Session
 from domain.models import Order, Product
 from domain.repositories import ProductRepository, OrderRepository
@@ -16,8 +18,8 @@ class SqlAlchemyProductRepository(ProductRepository):
     def get(self, product_id: int) -> ProductORM:
         return self.session.query(ProductORM).filter_by(id=product_id).scalar()
 
-    def list(self) -> list[ProductORM]:
-        return self.session.query(ProductORM).scalar().all()
+    def list(self) -> list[Type[ProductORM]]:
+        return self.session.query(ProductORM).all()
 
 
 class SqlAlchemyOrderRepository(OrderRepository):
@@ -33,5 +35,5 @@ class SqlAlchemyOrderRepository(OrderRepository):
     def get(self, order_id: int) -> OrderORM:
         return self.session.query(OrderORM).filter_by(id=order_id).scalar()
 
-    def list(self) -> list[OrderORM]:
-        return self.session.query(OrderORM).scalar().all()
+    def list(self) -> list[Type[OrderORM]]:
+        return self.session.query(OrderORM).all()
